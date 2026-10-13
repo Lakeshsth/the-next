@@ -67,6 +67,8 @@ async function needJsPdf(){
 
 /* ---------- reading files ---------- */
 const MAX_PX=4000;
+const MAX_PAGES=300;      /* most pages we will process in one PDF */
+const TOTAL_PX=120e6;
 async function prepare(d){
   if(d.kind==='image'){
     let bmp;
