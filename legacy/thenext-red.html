@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Next Document Toolkit – Make documents fit the upload limit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,wght@0,400;0,500;0,600;0,700" rel="stylesheet">
+<style>
+:root{
+  /* Colours taken from the red and white reference. Change these to the exact brand values if different. */
+  --primary:#C1191C; --primary2:#A31316; --bright:#E3212A;
+  --ink:#2B2B2B; --muted:#6E6E6E; --line:#E6E6E6; --grey:#F3F3F3; --soft:#FBEDED;
+  /* names used by the tool, photo, checklist and FAQ blocks */
+  --navy:var(--primary); --navy-deep:var(--primary2); --lav:var(--soft); --lav2:var(--grey); --lav3:#F4D5D5;
+  --brand:var(--primary); --brand-soft:#FBE4E4; --gold:var(--bright); --accent:var(--bright); --bg:var(--grey); --surface:#fff;
+  --ok:#14935F; --ok-soft:#DDF5EA; --warn:#B8420F; --warn-soft:#FDE9DD; --stamp:#E5484D;
+  --font:'Google Sans','Google Sans Text','Product Sans','Segoe UI',system-ui,-apple-system,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 90px);scroll-behavior:smooth}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:#fff;color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3,h4{margin:0;font-family:var(--font);color:var(--ink);letter-spacing:-.02em;line-height:1.15;font-weight:600}
+p{margin:0}
+a{color:inherit}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--primary);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* copyright strip */
+.copybar{background:var(--primary2);color:#fff;text-align:center;font-size:13px;font-weight:500;letter-spacing:.02em;padding:8px 16px;line-height:1.4}
+.copybar b{font-weight:700}
+/* header */
+.hd{background:#fff;position:sticky;top:0;z-index:40;border-bottom:1px solid var(--line);transition:box-shadow .3s}
+.hd.scrolled{box-shadow:0 6px 24px rgba(0,0,0,.1)}
+.hdin{display:flex;align-items:center;gap:22px;height:68px;position:relative}
+.logo{display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--primary);font-weight:700;font-size:23px;letter-spacing:-.03em}
+.logo svg{width:26px;height:26px;flex:none}
+.tagline{font-size:12px;line-height:1.35;color:var(--primary);font-weight:500;border-left:1px solid var(--line);padding-left:18px;max-width:200px}
+.links{display:flex;gap:24px;margin-left:auto}
+.links a{text-decoration:none;font-weight:500;font-size:14.5px;color:var(--ink);position:relative;padding:4px 0}
+.links a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:var(--primary);transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.links a:hover::after{transform:scaleX(1)}
+.phone{font-weight:600;font-size:17px;text-decoration:none;color:var(--ink);white-space:nowrap}
+.tab{position:absolute;right:24px;top:100%;background:var(--bright);color:#fff;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;padding:9px 26px;border-radius:0 0 4px 4px;transition:background .2s,padding .25s}
+.tab:hover{background:var(--primary2);padding-bottom:13px}
+@media (max-width:1000px){.tagline{display:none}.links{display:none}.phone{margin-left:auto}}
+@media (max-width:520px){.phone{font-size:15px}.tab{right:12px}}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border-radius:4px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);cursor:pointer;font-weight:600;font-size:15px;text-decoration:none;transition:transform .15s,background .2s,box-shadow .2s}
+.btn:hover{background:var(--soft)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--bright);border-color:var(--bright);color:#fff}
+.btn.primary:hover{background:var(--primary2);border-color:var(--primary2)}
+.btn.white{background:#fff;border-color:#fff;color:var(--primary)}
+.btn.white:hover{background:var(--soft)}
+.btn.small{padding:8px 16px;font-size:14px}
+.btn.lg{padding:15px 34px;font-size:15px;letter-spacing:.03em;text-transform:uppercase}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.textlink{color:#fff;text-decoration:none;font-weight:600;border-bottom:1.5px solid rgba(255,255,255,.7);padding-bottom:2px}
+.textlink:hover{border-color:#fff}
+
+/* hero */
+.hero{background:linear-gradient(180deg,var(--primary) 0%,var(--primary2) 100%);color:#fff;position:relative;overflow:hidden;text-align:center}
+.deco{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.deco .d1{animation:drift 16s ease-in-out infinite alternate}
+.deco .d2{animation:drift 22s ease-in-out infinite alternate-reverse}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(14px,-12px)}}
+.hero .wrap{position:relative;z-index:2;padding-top:84px;padding-bottom:84px}
+.hero h1{color:#fff;font-size:clamp(34px,5vw,56px);font-weight:600;max-width:15ch;margin:0 auto;line-height:1.1}
+.kicker{margin-top:18px;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;color:#FFE3E3}
+.dedic{display:inline-flex;align-items:center;gap:10px;margin-top:20px;padding:10px 22px;border:1.5px solid rgba(255,255,255,.55);background:rgba(255,255,255,.12);border-radius:999px;font-size:15px;font-weight:500;color:#fff;letter-spacing:.01em}
+.dedic svg{width:18px;height:18px;flex:none;fill:#FFD9D9}
+.dedic b{font-weight:700}
+@media (max-width:520px){.dedic{font-size:13.5px;padding:9px 16px;text-align:left}}
+.cards{display:flex;justify-content:center;gap:14px;margin-top:34px;flex-wrap:wrap}
+.scard{background:#fff;color:var(--muted);width:200px;padding:30px 12px 22px;text-align:center;box-shadow:0 14px 34px rgba(80,0,0,.22);transition:transform .3s}
+.scard:hover{transform:translateY(-6px)}
+.scard b{display:block;color:var(--bright);font-size:46px;font-weight:500;letter-spacing:-.03em;line-height:1.1}
+.scard span{display:block;font-size:13px;line-height:1.35;margin-top:14px}
+.hero-actions{display:flex;justify-content:center;gap:28px;align-items:center;margin-top:40px;flex-wrap:wrap}
+
+/* sections */
+section.pad{padding:84px 0}
+.bg-grey{background:var(--grey)}
+.bg-white{background:#fff}
+.head{max-width:640px;margin:0 auto 46px;text-align:center}
+.title{font-size:clamp(26px,3.2vw,36px);font-weight:600;color:var(--ink)}
+.lead{margin-top:12px;color:var(--muted);font-size:16.5px}
+
+/* why */
+.why{display:grid;grid-template-columns:1fr 1fr;gap:34px 64px;max-width:920px;margin:0 auto}
+@media (max-width:720px){.why{grid-template-columns:1fr}}
+.why>div{display:flex;gap:18px;align-items:flex-start}
+.why .ic{flex:none;width:44px;height:44px;color:var(--bright);transition:transform .4s}
+.why>div:hover .ic{transform:scale(1.12) rotate(-5deg)}
+.why h3{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--bright);font-weight:600;margin-bottom:8px}
+.why p{font-size:14.5px;color:var(--muted)}
+.proof{margin-top:50px;padding-top:30px;border-top:1px solid var(--line);display:flex;gap:14px 30px;flex-wrap:wrap;justify-content:center;align-items:center;font-size:14px;color:var(--muted)}
+.proof b{color:var(--primary);font-weight:600}
+.chipx{border:1.5px solid var(--primary);color:var(--primary);border-radius:3px;padding:3px 12px;font-weight:600;font-size:13px}
+
+/* how */
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;max-width:960px;margin:0 auto}
+@media (max-width:780px){.how{grid-template-columns:1fr;gap:28px}}
+.how>div{text-align:center}
+.how .n{width:54px;height:54px;border-radius:50%;border:2px solid var(--bright);color:var(--bright);display:grid;place-items:center;font-size:22px;font-weight:500;margin:0 auto 16px}
+.how b{display:block;font-size:18px;font-weight:600;margin-bottom:6px}
+.how p{color:var(--muted);font-size:15px;max-width:30ch;margin:0 auto}
+
+/* services */
+.svc-list{list-style:none;margin:0 auto;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:0 56px;max-width:920px}
+@media (max-width:780px){.svc-list{grid-template-columns:1fr}}
+.svc-list li{padding:16px 0 16px 22px;border-top:1px solid #DDD;position:relative}
+.svc-list li::before{content:"";position:absolute;left:0;top:26px;width:8px;height:8px;background:var(--bright)}
+.svc-list b{display:block;font-size:16px;font-weight:600}
+.svc-list span{color:var(--muted);font-size:14.5px}
+
+/* reviews */
+.rv{position:relative;max-width:1000px;margin:0 auto}
+.rv-track{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:6px 4px 10px;scrollbar-width:none}
+.rv-track::-webkit-scrollbar{display:none}
+.rv-card{flex:0 0 calc((100% - 28px)/3);scroll-snap-align:start;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.08);padding:30px 22px;text-align:center;border-radius:2px}
+@media (max-width:820px){.rv-card{flex-basis:calc((100% - 14px)/2)}}
+@media (max-width:520px){.rv-card{flex-basis:88%}}
+.rv-av{width:62px;height:62px;border-radius:50%;border:3px solid var(--bright);margin:0 auto 14px;display:grid;place-items:center;font-weight:600;font-size:19px;color:var(--primary);background:var(--soft)}
+.rv-card h4{font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--bright);font-weight:600}
+.rv-card small{display:block;font-size:12px;color:var(--muted);margin-bottom:12px}
+.rv-card p{font-size:14px;color:var(--muted)}
+.rv-btn{position:absolute;top:50%;translate:0 -50%;width:34px;height:34px;background:var(--bright);color:#fff;border:0;cursor:pointer;display:grid;place-items:center;font-size:18px;line-height:1;z-index:2;transition:background .2s}
+.rv-btn:hover{background:var(--primary2)}
+.rv-btn.l{left:-17px}.rv-btn.r{right:-17px}
+@media (max-width:1060px){.rv-btn.l{left:-4px}.rv-btn.r{right:-4px}}
+.srcnote{font-size:13px;color:var(--muted);text-align:center;margin-top:18px}
+
+/* destinations grid */
+.dgrid{display:grid;grid-template-columns:repeat(4,1fr);max-width:900px;margin:0 auto;background:#fff}
+@media (max-width:720px){.dgrid{grid-template-columns:1fr 1fr}}
+.dgrid .dtile{border:0;background:#fff;font:inherit;color:inherit;cursor:pointer;display:block;width:100%}
+.dgrid .dtile{padding:34px 16px;text-align:center;text-decoration:none;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transition:background .25s,color .25s}
+.dgrid .dtile:nth-child(4n){border-right:0}
+.dgrid .dtile:nth-last-child(-n+4){border-bottom:0}
+@media (max-width:720px){.dgrid .dtile:nth-child(4n){border-right:1px solid var(--line)}.dgrid .dtile:nth-child(2n){border-right:0}.dgrid .dtile:nth-last-child(-n+4){border-bottom:1px solid var(--line)}.dgrid .dtile:nth-last-child(-n+2){border-bottom:0}}
+.dgrid b{display:block;font-size:19px;font-weight:600;color:var(--ink);transition:color .25s}
+.dgrid span{font-size:13px;color:var(--muted)}
+.dgrid .dtile:hover{background:var(--primary)}
+.dgrid .dtile:hover b,.dgrid .dtile:hover span{color:#fff}
+
+/* offices */
+.offices{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:start;max-width:960px;margin:0 auto}
+@media (max-width:860px){.offices{grid-template-columns:1fr;gap:28px}}
+.offices .field{margin-top:6px}
+.ocard{background:#fff;border-top:4px solid var(--bright);padding:28px;box-shadow:0 2px 14px rgba(0,0,0,.08)}
+.ocard h3{font-size:22px;margin-bottom:18px}
+.ocard dl{margin:0;display:grid;gap:14px}
+.ocard dt{font-size:12.5px;color:var(--muted)}
+.ocard dd{margin:2px 0 0;font-weight:500}
+.ocard dd a{color:var(--primary)}
+.ocard .actions{margin-top:22px}
+
+/* band + form */
+.band{background:linear-gradient(180deg,var(--primary) 0%,var(--primary2) 100%);color:#fff;text-align:center;padding:72px 0 150px}
+.band h2{color:#fff;font-size:clamp(28px,3.6vw,42px);font-weight:500}
+.band p{color:#FFE3E3;margin-top:12px}
+.formwrap{background:#fff;padding:0 0 70px}
+.fcard{background:#fff;max-width:820px;margin:-100px auto 0;padding:38px 40px 42px;box-shadow:0 14px 44px rgba(0,0,0,.14);position:relative;text-align:center}
+@media (max-width:560px){.fcard{padding:28px 20px 32px}}
+.fcard h3{font-size:26px;font-weight:500}
+.fcard .sub{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--bright);font-weight:600;margin-top:6px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px 22px;margin:28px 0 22px;text-align:left}
+@media (max-width:620px){.fgrid{grid-template-columns:1fr}}
+.fgrid label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px}
+.fgrid input,.fgrid select{width:100%;padding:12px 14px;border:1px solid var(--line);background:var(--grey);border-radius:2px}
+.fnote{font-size:12px;color:var(--muted);margin-bottom:20px}
+
+/* footer */
+footer{background:var(--primary2);color:#F4CFCF;padding:34px 0;font-size:13.5px}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;align-items:center;flex-wrap:wrap}
+footer .r{text-align:right}
+footer .r b{display:block;color:#fff;font-size:18px;font-weight:600}
+footer a{text-decoration:none}
+footer a:hover{color:#fff}
+@media (max-width:620px){footer .r{text-align:left}}
+
+/* ---- reused: tool, photo + checklist, faq ---- */
+/* tool */
+.tool-head{margin-bottom:30px}
+.tool{background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px;box-shadow:0 12px 40px rgba(120,16,18,.08)}
+@media (max-width:560px){.tool{padding:16px}}
+.step-label{font-weight:700;font-size:15px;margin-bottom:10px;color:var(--navy);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.step-label small{font-weight:500;color:var(--muted);font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:9px 18px;border-radius:7px;border:1.5px solid var(--line);background:var(--lav2);cursor:pointer;font-weight:700;font-size:15px;color:var(--navy)}
+.chip:hover{border-color:var(--brand)}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.custom{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:14px;color:var(--muted);flex-wrap:wrap}
+.custom input,.custom select,.field input,.field select{padding:9px 12px;border:1.5px solid var(--line);border-radius:7px;background:var(--lav2);width:100px}
+.custom select,.field select{width:auto}
+.drop{display:block;margin-top:24px;border:2px dashed #D9C2C2;border-radius:12px;padding:34px 20px;text-align:center;cursor:pointer;background:var(--lav2);transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--brand);background:var(--brand-soft)}
+.drop input{position:absolute;opacity:0;width:1px;height:1px}
+.drop:focus-within{outline:3px solid var(--brand);outline-offset:2px}
+.drop-icon{width:50px;height:50px;margin:0 auto 12px;border-radius:50%;background:var(--navy);display:grid;place-items:center;color:#fff}
+.drop strong{display:block;font-size:19px;color:var(--navy)}
+.drop span{color:var(--muted);font-size:14px}
+.files{display:grid;gap:16px;margin-top:22px}
+.file{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff}
+.file-top{display:flex;gap:12px;align-items:center}
+.ficon{flex:none;width:44px;height:44px;border-radius:9px;background:var(--lav);color:var(--navy);display:grid;place-items:center;font-weight:800;font-size:12px}
+.fmeta{min-width:0;flex:1}
+.fname{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--navy)}
+.fsub{font-size:13px;color:var(--muted)}
+.icon-btn{border:0;background:transparent;cursor:pointer;width:34px;height:34px;border-radius:50%;font-size:22px;line-height:1;color:var(--muted)}
+.icon-btn:hover{background:var(--lav);color:var(--navy)}
+.g-rows{position:relative;margin:28px 0 8px}
+.g-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:13px;color:var(--muted)}
+.g-row .lbl{width:48px;flex:none}
+.g-track{flex:1;height:14px;background:var(--lav);border-radius:99px;overflow:hidden}
+.g-fill{height:100%;border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1),background .3s;width:0}
+.g-row .val{width:92px;text-align:right;font-weight:700;color:var(--navy);flex:none}
+.g-inner{position:absolute;left:58px;right:102px;top:0;bottom:0}
+.g-limit{position:absolute;top:-4px;bottom:0;border-left:2px dashed var(--navy);pointer-events:none;transition:left .4s}
+.g-limit span{position:absolute;top:-22px;transform:translateX(-50%);font-size:11px;font-weight:700;white-space:nowrap;background:var(--navy);color:#fff;padding:1px 9px;border-radius:99px}
+.status{display:flex;align-items:center;gap:10px;font-size:14.5px;margin-top:6px;padding:10px 12px;border-radius:8px;background:var(--lav2)}
+.status.ok{background:var(--ok-soft);color:var(--ok)}
+.status.warn{background:var(--warn-soft);color:var(--warn)}
+.status b{font-weight:700}
+.spin{width:16px;height:16px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--brand);animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.q-badge{margin-left:auto;font-weight:700;font-size:12.5px;padding:3px 10px;border-radius:99px;background:#fff;border:1px solid currentColor;white-space:nowrap}
+.fine{margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px}
+.fine label{font-weight:700;color:var(--navy)}
+.fine input[type=range]{flex:1;min-width:140px;accent-color:var(--brand)}
+.fine output{font-weight:700;min-width:44px}
+.fine .pred{color:var(--muted);min-width:110px;font-weight:600}
+.actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.compare{margin-top:16px}
+.cmp-box{position:relative;overflow:hidden;border-radius:10px;border:1px solid var(--line);background:#888;user-select:none;touch-action:pan-y;cursor:zoom-in}
+.cmp-box.zoom{cursor:zoom-out}
+.cmp-box img{display:block;width:100%;height:100%;object-fit:fill;position:absolute;inset:0;transform-origin:var(--ox,50%) var(--oy,50%);transition:transform .2s}
+.cmp-box.zoom img{transform:scale(3)}
+.cmp-box img.top{clip-path:inset(0 calc(100% - var(--pos,50%)) 0 0)}
+.cmp-line{position:absolute;top:0;bottom:0;left:var(--pos,50%);width:3px;margin-left:-1.5px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);pointer-events:none}
+.cmp-tag{position:absolute;top:10px;font-size:12px;font-weight:700;padding:2px 10px;border-radius:99px;background:rgba(0,0,0,.65);color:#fff;pointer-events:none}
+.cmp-tag.l{left:10px}.cmp-tag.r{right:10px}
+.cmp-range{width:100%;margin-top:10px;accent-color:var(--brand)}
+.cmp-help{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* photo */
+.photo{display:grid;grid-template-columns:330px 1fr;gap:26px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px;box-shadow:0 12px 40px rgba(120,16,18,.08);margin-top:34px}
+@media (max-width:780px){.photo{grid-template-columns:1fr;padding:16px}}
+.field{display:grid;gap:6px;margin-bottom:14px;font-size:14px}
+.field label{font-weight:700;color:var(--navy)}
+.field input[type=range]{width:100%;accent-color:var(--brand);padding:0}
+.field input[type=file]{width:100%;padding:8px}
+.field select{width:100%}
+.photo-stage{display:grid;place-items:center;background:var(--lav);border-radius:12px;padding:20px;min-height:300px}
+.photo-stage canvas{max-width:100%;max-height:430px;border-radius:6px;box-shadow:0 6px 24px rgba(120,16,18,.25);background:#fff}
+.photo-empty{color:var(--muted);text-align:center;font-size:15px}
+
+/* checklist */
+.check-wrap{display:grid;grid-template-columns:260px 1fr;gap:26px;margin-top:34px;text-align:left}
+@media (max-width:780px){.check-wrap{grid-template-columns:1fr}}
+.countries{display:flex;flex-direction:column;gap:8px}
+@media (max-width:780px){.countries{flex-direction:row;flex-wrap:wrap}}
+.country{padding:13px 18px;border-radius:9px;border:1.5px solid var(--line);background:#fff;cursor:pointer;text-align:left;font-weight:700;color:var(--navy)}
+.country[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.clist{background:#fff;border:1px solid var(--line);border-radius:14px;padding:6px 22px 22px}
+.cprog{display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--line);font-weight:700;color:var(--navy)}
+.cprog .track{flex:1;height:10px;background:var(--lav);border-radius:99px;overflow:hidden}
+.cprog .track i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.citem{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.citem:last-of-type{border-bottom:0}
+.citem input{width:22px;height:22px;margin-top:2px;accent-color:var(--navy);flex:none}
+.citem b{display:block;font-weight:700;color:var(--navy)}
+.citem.done b{text-decoration:line-through;color:var(--muted)}
+.citem small{color:var(--muted);font-size:14px}
+.note{font-size:13px;color:var(--muted);margin-top:14px}
+
+/* faq */
+.faq{max-width:780px;margin:34px auto 0;text-align:left;display:grid;gap:12px}
+.faq details{background:#fff;border:1px solid var(--line);border-radius:10px;padding:0 20px}
+.faq summary{cursor:pointer;font-weight:700;color:var(--navy);padding:16px 0;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-size:22px;line-height:1;color:var(--brand)}
+.faq details[open] summary::after{content:"–"}
+.faq details p{padding:0 0 18px;color:var(--muted);font-size:15px}
+
+
+.tool,.photo{box-shadow:none;border-radius:2px}
+.photo{margin-top:0;background:#fff}
+.check-wrap{margin-top:0}
+.faq{max-width:760px;margin:0 auto}
+.faq details{border-radius:2px}
+.clist{border-radius:2px}
+.drop{border-radius:2px}
+.drop-icon{background:var(--bright)}
+.chip{border-radius:3px}
+.chip[aria-pressed="true"],.country[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#fff}
+.country{border-radius:3px}
+.ficon{border-radius:4px}
+
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);transform:translate(-50%,20px);background:#2B2B2B;color:#fff;padding:12px 20px;border-radius:4px;font-size:14.5px;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:90vw}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.rmbtn{flex:none;display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:#fff;color:var(--ink);border-radius:3px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.rmbtn:hover{background:var(--soft);border-color:var(--primary);color:var(--primary)}
+.filesbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+.filesbar+.files{margin-top:16px}
+.tab{transition:background .2s,padding .25s,translate .3s,opacity .3s}
+.hd.scrolled .tab{translate:0 -100%;opacity:0;pointer-events:none}
+.limitrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.seg{display:inline-flex;border:1.5px solid var(--primary);border-radius:4px;overflow:hidden}
+.seg button{border:0;background:#fff;color:var(--primary);font-weight:700;padding:11px 22px;cursor:pointer;font-size:15px;transition:background .2s,color .2s}
+.seg button[aria-pressed="true"]{background:var(--primary);color:#fff}
+.limitrow input{width:130px;padding:11px 14px;border:1.5px solid var(--line);border-radius:4px;background:#fff;font-size:18px;font-weight:600}
+.limitnow{color:var(--muted);font-size:14.5px}
+.goRow{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap}
+.gohint{font-size:14px;color:var(--muted)}
+/* ---- motion ---- */
+.file{animation:pop .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes pop{from{opacity:0;translate:0 16px}to{opacity:1;translate:0 0}}
+.status.ok{animation:okflash 1s ease}
+@keyframes okflash{0%{box-shadow:0 0 0 0 rgba(20,147,95,.4)}100%{box-shadow:0 0 0 12px rgba(20,147,95,0)}}
+.citem{animation:slideIn .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes slideIn{from{opacity:0;translate:-12px 0}to{opacity:1;translate:0 0}}
+.citem:nth-child(1){animation-delay:40ms}.citem:nth-child(2){animation-delay:80ms}.citem:nth-child(3){animation-delay:120ms}.citem:nth-child(4){animation-delay:160ms}.citem:nth-child(5){animation-delay:200ms}.citem:nth-child(6){animation-delay:240ms}.citem:nth-child(7){animation-delay:280ms}.citem:nth-child(8){animation-delay:320ms}.citem:nth-child(9){animation-delay:360ms}.citem:nth-child(10){animation-delay:400ms}.citem:nth-child(11){animation-delay:440ms}.citem:nth-child(12){animation-delay:480ms}.citem:nth-child(13){animation-delay:520ms}.citem:nth-child(14){animation-delay:560ms}.citem:nth-child(15){animation-delay:600ms}
+.faq details[open] p{animation:faqIn .35s ease}
+@keyframes faqIn{from{opacity:0;translate:0 -6px}to{opacity:1;translate:0 0}}
+.faq summary::after{transition:transform .3s;color:var(--primary)}
+.faq details[open] summary::after{transform:rotate(180deg)}
+.drop-icon{transition:transform .3s}
+.drop:hover .drop-icon{transform:translateY(-4px)}
+.armed .reveal{opacity:0;translate:0 24px;transition:opacity .8s cubic-bezier(.2,.7,.2,1) var(--d,0ms),translate .8s cubic-bezier(.2,.7,.2,1) var(--d,0ms)}
+.armed .reveal.in{opacity:1;translate:0 0}
+.armed .hero [data-h]{opacity:0;translate:0 22px;animation:heroIn .9s cubic-bezier(.2,.7,.2,1) var(--d,0ms) forwards}
+@keyframes heroIn{to{opacity:1;translate:0 0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}.armed .reveal,.armed .hero [data-h]{opacity:1!important;translate:none!important}}
+</style>
+</head>
+<body>
+
+<div class="copybar" role="note">© 2026 The Next Document Toolkit · Made by <b>Lakesh Shrestha</b> · All rights reserved</div>
+<header class="hd" id="hd">
+  <div class="wrap hdin">
+    <a class="logo" href="#top"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z" fill="#C1191C"/></svg>the next</a>
+    <div class="tagline">Document toolkit for students applying abroad</div>
+    <nav class="links" aria-label="Main">
+      <a href="#tool">Shrink documents</a>
+      <a href="#photo">Photo resizer</a>
+      <a href="#checklist">Checklist</a>
+      <a href="#offices">Offices</a>
+    </nav>
+    <a class="phone" href="tel:+97715970268">+977-01-5970268</a>
+    <a class="tab" href="#enquiry">Free counselling</a>
+  </div>
+</header>
+
+<main id="top">
+<section class="hero">
+  <svg class="deco" viewBox="0 0 1200 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g class="d1" fill="rgba(255,255,255,.07)">
+      <circle cx="90" cy="80" r="46"/><circle cx="1090" cy="120" r="70"/><circle cx="210" cy="430" r="34"/><circle cx="980" cy="470" r="52"/>
+      <rect x="150" y="200" width="46" height="46"/><rect x="1010" y="300" width="36" height="36"/>
+      <rect x="300" y="60" width="9" height="40"/><rect x="316" y="44" width="9" height="56"/><rect x="332" y="70" width="9" height="30"/>
+      <rect x="860" y="430" width="9" height="34"/><rect x="876" y="412" width="9" height="52"/><rect x="892" y="440" width="9" height="24"/>
+    </g>
+    <g class="d2" stroke="rgba(255,255,255,.14)" stroke-width="2" fill="none">
+      <path d="M60 300l60-40 50 50 40-30"/><path d="M1000 200l70 40 60-30"/><path d="M520 500l60-30 70 34"/>
+    </g>
+    <g class="d2" fill="rgba(255,255,255,.2)">
+      <circle cx="60" cy="300" r="6"/><circle cx="120" cy="260" r="6"/><circle cx="170" cy="310" r="6"/><circle cx="1000" cy="200" r="6"/><circle cx="1070" cy="240" r="6"/><circle cx="1130" cy="210" r="6"/>
+    </g>
+  </svg>
+  <div class="wrap">
+    <h1>Make every document fit the upload limit</h1>
+    <p class="kicker">A free toolkit from The Next Education Consultancy</p>
+    <p class="dedic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 2.7 5 6 5c2 0 3.4 1 4.2 2.3h3.6C14.6 6 16 5 18 5c3.3 0 5.1 3.4 3.6 6.8C19.5 16.4 12 21 12 21z"/></svg><span>Specially built for <b>Tara Ma'am</b> and <b>Shreni Ma'am</b></span></p>
+    <div class="cards">
+      <div class="scard"><b>20th</b><span>year of success in<br>education counselling</span></div>
+      <div class="scard"><b>6000+</b><span>students trusted<br>The Next</span></div>
+      <div class="scard"><b>3</b><span>countries: Nepal,<br>Australia, Sri Lanka</span></div>
+    </div>
+    <div class="hero-actions">
+      <a class="btn white lg" href="#tool">Shrink a document</a>
+      <a class="textlink" href="https://wa.me/9761789708" target="_blank" rel="noopener">Talk to a counsellor</a>
+    </div>
+  </div>
+</section>
+
+<section class="pad bg-white" id="why">
+  <div class="wrap">
+    <div class="head"><h2 class="title">Why The Next?</h2></div>
+    <div class="why">
+      <div>
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 11l2 2 4-4"/></svg>
+        <div><h3>Certified career counsellors</h3><p>Guidance from your first question about country and course, all the way to your final visa.</p></div>
+      </div>
+      <div>
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.3 7.8-8 9-4.7-1.2-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+        <div><h3>Visa expert team</h3><p>A dedicated team prepares your documents and handles visa lodgement for a high visa success rate.</p></div>
+      </div>
+      <div>
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>
+        <div><h3>Offices near you</h3><p>Branches across Nepal, plus offices in Sydney, Perth and Colombo to support you abroad.</p></div>
+      </div>
+      <div>
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M5.6 5.6l3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9"/></svg>
+        <div><h3>Support at every step</h3><p>Documentation guidance, interview practice, scholarship help and a pre-departure briefing.</p></div>
+      </div>
+    </div>
+    <div class="proof">
+      <span class="chipx">ICEF</span><span class="chipx">AIRC</span><span class="chipx">ISO</span>
+      <span><b>Best Performer of the Year</b> 2016</span>
+      <span><b>Best Educational Consultant (Australia)</b> 2016</span>
+      <span><b>Most Promising Agent, Curtin College</b> 2017</span>
+    </div>
+  </div>
+</section>
+
+<section class="pad bg-grey" id="tool">
+  <div class="wrap">
+    <div class="head">
+      <h2 class="title">Shrink to the exact size you need</h2>
+      <p class="lead">Choose the limit, add your files, and check the result before you download. Works with PDF, JPG and PNG.</p>
+    </div>
+    <div class="tool">
+      <div class="step-label">1. Choose your size limit <small>Pick MB or KB, then the size your portal allows</small></div>
+      <div class="limitrow">
+        <div class="seg" id="unitSeg" role="group" aria-label="Unit">
+          <button type="button" data-u="1048576" aria-pressed="true">MB</button>
+          <button type="button" data-u="1024" aria-pressed="false">KB</button>
+        </div>
+        <input type="number" id="limitVal" value="4" min="0" step="any" inputmode="decimal" aria-label="Size limit">
+        <span class="limitnow" id="limitNow"></span>
+      </div>
+      <div class="chips" id="chips" role="group" aria-label="Quick sizes"></div>
+      <div class="step-label" style="margin-top:28px">2. Add your files <small>Then press Compress on each file</small></div>
+      <label class="drop" id="drop">
+        <input type="file" id="fileInput" accept="application/pdf,image/*" multiple>
+        <div class="drop-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
+        </div>
+        <strong>Drop files here or tap to choose</strong>
+        <span>PDF, JPG, PNG. Any file size.</span>
+      </label>
+      <div class="filesbar" id="filesBar" hidden><span id="fileCount"></span><span style="display:flex;gap:10px"><button class="btn primary small" id="compressAll" type="button">Compress all</button><button class="btn primary small" id="downloadAll" type="button" style="background:var(--primary2);border-color:var(--primary2)">Download all</button><button class="btn small" id="clearAll" type="button">Clear all files</button></span></div>
+      <div class="files" id="files" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section class="pad bg-white" id="how">
+  <div class="wrap">
+    <div class="head"><h2 class="title">Three steps to a file your portal accepts</h2></div>
+    <div class="how">
+      <div><div class="n">1</div><b>Set your limit</b><p>Pick the size your portal allows, such as 4 MB or 500 KB.</p></div>
+      <div><div class="n">2</div><b>Add your files</b><p>Drop PDFs or photos. The exact size is shown before and after.</p></div>
+      <div><div class="n">3</div><b>Check and download</b><p>Compare quality, zoom into text, then download and submit.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="pad bg-grey" id="photo">
+  <div class="wrap">
+    <div class="head">
+      <h2 class="title">Passport photos in the right size</h2>
+      <p class="lead">Crop to the exact pixels, then keep the file under the limit. Many portals ask for 50 to 100 KB.</p>
+    </div>
+    <div class="photo">
+      <div>
+        <div class="field"><label for="pFile">Your photo</label><input type="file" id="pFile" accept="image/*"></div>
+        <div class="field"><label for="pPreset">Photo type</label>
+          <select id="pPreset">
+            <option value="413x531">Passport 35 × 45 mm (413 × 531 px)</option>
+            <option value="600x600">Visa 2 × 2 inch (600 × 600 px)</option>
+            <option value="300x400">ID photo 3:4 (300 × 400 px)</option>
+            <option value="400x150">Signature strip (400 × 150 px)</option>
+          </select></div>
+        <div class="field"><label for="pMax">Maximum file size (KB)</label><input type="number" id="pMax" value="100" min="10" style="width:100%"></div>
+        <div class="field"><label for="pZoom">Zoom</label><input type="range" id="pZoom" min="1" max="3" step="0.01" value="1"></div>
+        <div class="field"><label for="pX">Move left / right</label><input type="range" id="pX" min="-100" max="100" value="0"></div>
+        <div class="field"><label for="pY">Move up / down</label><input type="range" id="pY" min="-100" max="100" value="0"></div>
+        <div class="status" id="pStatus">Choose a photo to begin.</div>
+        <div class="actions"><button class="btn primary" id="pDl" disabled>Download photo</button></div>
+      </div>
+      <div class="photo-stage">
+        <div class="photo-empty" id="pEmpty">Your cropped photo appears here.</div>
+        <canvas id="pCanvas" hidden></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pad bg-white" id="checklist">
+  <div class="wrap">
+    <div class="head">
+      <h2 class="title">Know which documents to prepare</h2>
+      <p class="lead">Pick your destination and tick items off as you scan them. Progress is saved on this device.</p>
+    </div>
+    <div class="check-wrap">
+      <div class="countries" id="countries" role="group" aria-label="Destination country"></div>
+      <div class="clist">
+        <div class="cprog"><span id="cCount">0 of 0</span><div class="track"><i id="cBar"></i></div></div>
+        <div id="cItems"></div>
+        <p class="note">This is a typical list to get you started. Requirements change by university, course and year, so always confirm with the university or embassy.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pad bg-grey" id="services">
+  <div class="wrap">
+    <div class="head"><h2 class="title">How The Next supports you</h2><p class="lead">From your first counselling session to the day you fly.</p></div>
+    <ul class="svc-list"><li><b>Counseling</b><span>One-to-one guidance on course, country and career.</span></li><li><b>Student screening</b><span>Background and eligibility checks before enrollment.</span></li><li><b>University application assistance</b><span>Help completing the admission process.</span></li><li><b>Documentation guidance</b><span>Preparing your own documents correctly.</span></li><li><b>Interview assistance</b><span>Practice for university and visa interviews.</span></li><li><b>Scholarship assistance</b><span>How to find and apply for outside scholarships.</span></li><li><b>Student visa declaration form</b><span>Compliance support for Australian universities and colleges.</span></li><li><b>I-20 and offer letter confirmation</b><span>Confirming your offer and I-20 paperwork.</span></li><li><b>Visa lodgement</b><span>Visa application and lodgement support.</span></li><li><b>Pre-departure briefing</b><span>What to know before you fly.</span></li><li><b>Test preparation</b><span>IELTS, PTE and SAT preparation classes.</span></li></ul>
+  </div>
+</section>
+
+<section class="pad bg-white" id="reviews">
+  <div class="wrap">
+    <div class="head"><h2 class="title">Student reviews</h2></div>
+    <div class="rv">
+      <button class="rv-btn l" id="rvPrev" aria-label="Previous reviews">‹</button>
+      <div class="rv-track" id="rvTrack"><article class="rv-card"><div class="rv-av">MS</div><h4>Madhusudan Subedi</h4><small>Studying in Australia</small><p>"The counselor's kindness and consistent follow-ups on documentation and interview preparation have been exceptional."</p></article><article class="rv-card"><div class="rv-av">DB</div><h4>Deepesh Bastola</h4><small>Australia visa</small><p>"I am able to get visa for Australia because of their proper guidelines."</p></article><article class="rv-card"><div class="rv-av">RS</div><h4>Rita Shrestha</h4><small>Student</small><p>"I felt so comfortable in my documentation processing."</p></article><article class="rv-card"><div class="rv-av">MT</div><h4>Mingma Tashi Cerpa</h4><small>Student</small><p>"The consultancy help me a lot to fulfill my dream and to achieve a good result."</p></article><article class="rv-card"><div class="rv-av">SS</div><h4>Suruchi Shrestha</h4><small>Student</small><p>"The staff are very friendly and helpful."</p></article><article class="rv-card"><div class="rv-av">HR</div><h4>Hemant Raj Mahato</h4><small>Masters in Australia</small><p>"They evaluate your case minutely and support you accordingly."</p></article></div>
+      <button class="rv-btn r" id="rvNext" aria-label="Next reviews">›</button>
+    </div>
+    <p class="srcnote">Student reviews. Please confirm permission before publishing.</p>
+  </div>
+</section>
+
+<section class="pad bg-grey" id="destinations">
+  <div class="wrap">
+    <div class="head"><h2 class="title">Study destinations</h2><p class="lead">Pick a country to ask a counsellor about it.</p></div>
+    <div class="dgrid"><button type="button" class="dtile" data-d="Australia"><b>Australia</b><span>Ask about this destination</span></button><button type="button" class="dtile" data-d="New Zealand"><b>New Zealand</b><span>Ask about this destination</span></button><button type="button" class="dtile" data-d="Canada"><b>Canada</b><span>Ask about this destination</span></button><button type="button" class="dtile" data-d="United Kingdom"><b>United Kingdom</b><span>Ask about this destination</span></button><button type="button" class="dtile" data-d="USA"><b>USA</b><span>Ask about this destination</span></button><button type="button" class="dtile" data-d="Ireland"><b>Ireland</b><span>Ask about this destination</span></button><button type="button" class="dtile" data-d="Netherlands"><b>Netherlands</b><span>Ask about this destination</span></button><button type="button" class="dtile" data-d="Europe"><b>Europe</b><span>Ask about this destination</span></button></div>
+  </div>
+</section>
+
+<section class="pad bg-white" id="faq">
+  <div class="wrap">
+    <div class="head"><h2 class="title">Questions students ask</h2></div>
+    <div class="faq">
+      <details><summary>Are my passport and certificates safe?</summary><p>Yes. This toolkit works inside your browser. Your files are not uploaded to any server, so nobody else can see them.</p></details>
+      <details><summary>Which size limit should I choose?</summary><p>Use the number shown next to the upload box on your portal or in your counsellor's instructions. If it only says "under 5 MB", choose 4 MB or 5 MB.</p></details>
+      <details><summary>Why can't I select text in my compressed PDF?</summary><p>To shrink scanned pages, each page is saved as an image. That keeps the look but removes selectable text. If a portal needs searchable text, keep a copy of the original.</p></details>
+      <details><summary>It says the file cannot reach my limit. What now?</summary><p>The file has too many pages or too much detail for that size. Split it into parts (for example, one PDF per document), remove blank pages, or ask whether a higher limit is allowed.</p></details>
+      <details><summary>Does it work on my phone?</summary><p>Yes. Open this page in your phone browser, choose a file from your gallery or files app, and download the result.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="pad bg-grey" id="offices">
+  <div class="wrap">
+    <div class="head"><h2 class="title">Find your nearest office</h2><p class="lead">Branches across Nepal, plus offices in Australia and Sri Lanka.</p></div>
+    <div class="offices">
+      <div><div class="field"><label for="officeSel">Office</label><select id="officeSel"></select></div></div>
+      <div class="ocard" id="ocard" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="enquiry-band">
+  <div class="wrap">
+    <h2>Ready to study abroad?</h2>
+    <p>Talk to a certified counsellor at The Next. Free to ask.</p>
+  </div>
+</section>
+<section class="formwrap" id="enquiry">
+  <div class="wrap">
+    <div class="fcard">
+      <h3>Send your enquiry</h3>
+      <div class="sub">We will reply on WhatsApp</div>
+      <div class="fgrid">
+        <div><label for="fName">Your name *</label><input id="fName" type="text" autocomplete="name" placeholder="How should we address you?"></div>
+        <div><label for="fPhone">Your phone *</label><input id="fPhone" type="tel" autocomplete="tel" placeholder="98XXXXXXXX"></div>
+        <div><label for="fDest">Preferred study destination</label><select id="fDest"><option>Australia</option><option>New Zealand</option><option>Canada</option><option>UK</option><option>USA</option><option>Ireland</option><option>Denmark / Europe</option><option>Not sure yet</option></select></div>
+        <div><label for="fOffice">Nearest office</label><select id="fOffice"></select></div>
+      </div>
+      <p class="fnote">Fields marked * are required. Sending opens WhatsApp with your message ready.</p>
+      <button class="btn primary lg" id="fSend">Send on WhatsApp</button>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>© The Next Education Consultancy<br>Your files never leave your device.<br>© 2026 Made by Lakesh Shrestha. All rights reserved.</div>
+    <div class="r"><b><a href="tel:+97715970268">+977-01-5970268</a></b>The Next Centre, New Baneshwor, Kathmandu · <a href="mailto:info@thenext.edu.np">info@thenext.edu.np</a></div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s);
+const MB=1048576, KB=1024;
+const fmtKB=b=>Math.max(1,Math.round(b/KB)).toLocaleString('en-US')+' KB';
+const fmtMB=b=>Math.max(0.01,b/MB).toFixed(2)+' MB';
+let unit=MB;
+/* follows the unit the person chose: MB shows MB only, KB shows KB only */
+const fmt=b=>unit===MB?fmtMB(b):fmtKB(b);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tick=()=>new Promise(r=>setTimeout(r,0));
+const toBlob=(c,q)=>new Promise(r=>c.toBlob(r,'image/jpeg',q));
+
+/* toast */
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),3200)}
+
+/* ---------- target size ---------- */
+let target=4*MB;
+const docs=[];let uid=0;
+const PRE={[MB]:[1,2,3,4,5,10],[KB]:[50,100,200,300,500,750]};
+function drawChips(){
+  const box=$('#chips');box.innerHTML='';
+  PRE[unit].forEach(v=>{
+    const c=document.createElement('button');c.type='button';c.className='chip';c.textContent=v+(unit===MB?' MB':' KB');
+    c.setAttribute('aria-pressed',String(Math.round(v*unit)===target));
+    c.addEventListener('click',()=>{$('#limitVal').value=v;applyLimit(true)});box.appendChild(c);
+  });
+  document.querySelectorAll('#unitSeg button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.u===unit)));
+  $('#limitNow').textContent='Limit: '+fmt(target);
+}
+function setTarget(b){
+  target=b;drawChips();
+  docs.forEach(d=>{
+    if(d.status==='done'||d.status==='working'){
+      d.run++;d.manual=false;
+      if(d.result){if(d.result.url)URL.revokeObjectURL(d.result.url);if(d.result.preview)URL.revokeObjectURL(d.result.preview);d.result=null}
+      d.status='ready';
+    }
+    update(d);
+  });
+}
+function applyLimit(loud){
+  const v=parseFloat($('#limitVal').value);
+  if(!(v>0)){if(loud)toast('Type a size, for example 4.');return}
+  const b=Math.round(v*unit);
+  if(b<10*KB){if(loud)toast('That limit is too small. Try at least 10 KB.');return}
+  if(b!==target)setTarget(b);else drawChips();
+}
+let limTimer;
+$('#limitVal').addEventListener('input',()=>{clearTimeout(limTimer);limTimer=setTimeout(()=>applyLimit(false),350)});
+$('#limitVal').addEventListener('change',()=>applyLimit(true));
+document.querySelectorAll('#unitSeg button').forEach(b=>b.addEventListener('click',()=>{
+  unit=+b.dataset.u;$('#limitVal').value=unit===MB?4:500;applyLimit(true);docs.forEach(update);
+}));
+drawChips();
+
+/* ---------- libs ---------- */
+async function needPdf(){
+  for(let i=0;i<60;i++){if(window.pdfjsLib)break;await new Promise(r=>setTimeout(r,100))}
+  if(!window.pdfjsLib)throw new Error('PDF engine did not load. Check your connection and refresh.');
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+async function needJsPdf(){
+  for(let i=0;i<60;i++){if(window.jspdf)break;await new Promise(r=>setTimeout(r,100))}
+  if(!window.jspdf)throw new Error('PDF builder did not load. Check your connection and refresh.');
+}
+
+/* ---------- reading files ---------- */
+const MAX_PX=4000;
+async function prepare(d){
+  if(d.kind==='image'){
+    let bmp;
+    try{bmp=await createImageBitmap(d.file)}catch(e){
+      bmp=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(d.file)});
+    }
+    const w=bmp.width,h=bmp.height,s=Math.min(1,MAX_PX/Math.max(w,h));
+    const c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+    x.imageSmoothingQuality='high';x.drawImage(bmp,0,0,c.width,c.height);
+    d.canvases=[c];d.pageSizes=[[c.width,c.height]];d.pages=1;
+  }else{
+    await needPdf();
+    const buf=await d.file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    const n=Math.min(pdf.numPages,40);
+    d.pages=pdf.numPages;d.truncated=pdf.numPages>40;
+    d.canvases=[];d.pageSizes=[];
+    for(let i=1;i<=n;i++){
+      const p=await pdf.getPage(i);
+      const v1=p.getViewport({scale:1});
+      let sc=(n>12?150:n>4?200:250)/72;
+      while(v1.width*sc*v1.height*sc>8e6&&sc>0.8)sc-=0.1;
+      const vp=p.getViewport({scale:sc});
+      const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
+      const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+      await p.render({canvasContext:x,viewport:vp}).promise;
+      d.canvases.push(c);d.pageSizes.push([v1.width,v1.height]);
+      d.progress=i/n;update(d);await tick();
+    }
+  }
+  const ob=await toBlob(d.canvases[0],0.92);
+  d.origUrl=URL.createObjectURL(ob);
+}
+
+/* ---------- encoding ---------- */
+function stepDown(c,scale){
+  const tw=Math.max(1,Math.round(c.width*scale)),th=Math.max(1,Math.round(c.height*scale));
+  let cur=c;
+  while(cur.width/2>=tw&&cur.height/2>=th){
+    const n=document.createElement('canvas');n.width=Math.round(cur.width/2);n.height=Math.round(cur.height/2);
+    const x=n.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(cur,0,0,n.width,n.height);cur=n;
+  }
+  const o=document.createElement('canvas');o.width=tw;o.height=th;
+  const x=o.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,tw,th);x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(cur,0,0,tw,th);
+  return o;
+}
+function scaledPages(d,scale){
+  if(scale>=1)return d.canvases;
+  if(d._sc&&d._sc.scale===scale)return d._sc.list;
+  const list=d.canvases.map(c=>stepDown(c,scale));
+  d._sc={scale,list};return list;
+}
+async function encode(d,scale,q){
+  const blobs=[];let total=0;
+  for(const src of scaledPages(d,scale)){
+    const b=await toBlob(src,q);blobs.push(b);total+=b.size;
+  }
+  if(d.kind==='pdf')total+=1200+700*blobs.length;
+  return{blobs,bytes:total,scale,q};
+}
+async function buildPdf(d,blobs){
+  await needJsPdf();
+  const {jsPDF}=window.jspdf;let pdf=null;
+  for(let i=0;i<blobs.length;i++){
+    const [w,h]=d.pageSizes[i],o=w>h?'l':'p';
+    if(!pdf)pdf=new jsPDF({orientation:o,unit:'pt',format:[w,h],compress:true});
+    else pdf.addPage([w,h],o);
+    const u8=new Uint8Array(await blobs[i].arrayBuffer());
+    pdf.addImage(u8,'JPEG',0,0,w,h,undefined,'FAST');
+  }
+  return pdf.output('blob');
+}
+async function finalize(d,enc,limit){
+  let e=enc,out;
+  for(let t=0;t<4;t++){
+    out=d.kind==='pdf'?await buildPdf(d,e.blobs):e.blobs[0];
+    if(!limit||out.size<=limit||t===3)break;
+    e=await encode(d,e.scale,Math.max(0.2,e.q-0.04));
+  }
+  return{blob:out,size:out.size,q:e.q,scale:e.scale,preview:URL.createObjectURL(e.blobs[0])};
+}
+function setResult(d,r){
+  if(d.result){if(d.result.url)URL.revokeObjectURL(d.result.url);if(d.result.preview)URL.revokeObjectURL(d.result.preview)}
+  r.url=URL.createObjectURL(r.blob);d.result=r;
+}
+
+async function autoFit(d){
+  if(d.status==='loading'||d.status==='error'||!d.canvases.length)return;
+  const run=++d.run;d.status='working';d.msg='Finding the highest quality that fits…';update(d);
+  try{
+    if(d.file.size<=target){
+      setResult(d,{blob:d.file,size:d.file.size,original:true,q:1,scale:1,preview:null});
+      d.status='done';update(d);return;
+    }
+    /* Goal: the clearest result that fits. Text stays sharp when the page keeps its
+       resolution, so we accept a lower JPEG quality before we shrink the page.
+       Roomy limits still end at up to 98% quality. */
+    const QMAX=0.98;
+    const plan=[];
+    [1,.9,.8,.7,.6,.5].forEach(s=>plan.push([s,0.4]));
+    [1,.9,.8,.7,.6,.5].forEach(s=>plan.push([s,0.28]));
+    [.42,.35,.3,.25].forEach(s=>plan.push([s,0.28]));
+    let best=null;
+    for(const [sc,floor] of plan){
+      const low=await encode(d,sc,floor);if(run!==d.run)return;
+      if(low.bytes>target)continue;
+      let lo=floor,hi=QMAX,good=low;
+      const top=await encode(d,sc,QMAX);if(run!==d.run)return;
+      if(top.bytes<=target){good=top}
+      else{
+        for(let i=0;i<7;i++){
+          const mid=(lo+hi)/2,e=await encode(d,sc,mid);if(run!==d.run)return;
+          if(e.bytes<=target){lo=mid;good=e}else hi=mid;
+        }
+      }
+      best=good;break;
+    }
+    let tooBig=false;
+    if(!best){best=await encode(d,0.25,0.28);if(run!==d.run)return;tooBig=best.bytes>target}
+    d.suggestBytes=null;
+    if(best.scale<.85||best.q<.5){
+      const ref=await encode(d,1,0.6);if(run!==d.run)return;
+      d.suggestBytes=ref.bytes;
+    }
+    const r=await finalize(d,best,target);if(run!==d.run)return;
+    r.tooBig=tooBig||r.size>target;
+    setResult(d,r);d.status='done';d.q=r.q;update(d);
+  }catch(err){d.status='error';d.msg=err.message||'Something went wrong with this file.';update(d)}
+}
+let manualTimer;
+function manualEncode(d,qPct){
+  clearTimeout(manualTimer);
+  manualTimer=setTimeout(async()=>{
+    const run=++d.run;d.manual=true;d.status='working';d.msg='Calculating exact size…';update(d);
+    try{
+      const e=await encode(d,1,qPct/100);if(run!==d.run)return;
+      const r=await finalize(d,e,0);if(run!==d.run)return;
+      r.tooBig=r.size>target;setResult(d,r);d.status='done';update(d);
+    }catch(err){d.status='error';d.msg=err.message;update(d)}
+  },280);
+}
+
+/* ---------- cards ---------- */
+function qualityLabel(r){
+  if(r.original)return['Original','ok'];
+  const eff=r.q*(0.5+0.5*r.scale);
+  if(eff>=0.78)return['Excellent','ok'];
+  if(eff>=0.62)return['Good','ok'];
+  if(eff>=0.48)return['Readable','ok'];
+  return['Soft. Check text','warn'];
+}
+function createCard(d){
+  const el=document.createElement('article');el.className='file';el.dataset.id=d.id;
+  el.innerHTML=`
+  <div class="file-top">
+    <div class="ficon">${d.kind==='pdf'?'PDF':'IMG'}</div>
+    <div class="fmeta"><div class="fname">${esc(d.file.name)}</div><div class="fsub"></div></div>
+    <button class="rmbtn rm" aria-label="Remove ${esc(d.file.name)}"><span aria-hidden="true">✕</span> Remove</button>
+  </div>
+  <div class="g-rows">
+    <div class="g-inner"><div class="g-limit"><span></span></div></div>
+    <div class="g-row"><span class="lbl">Before</span><div class="g-track"><div class="g-fill g-before"></div></div><span class="val v-before"></span></div>
+    <div class="g-row"><span class="lbl">After</span><div class="g-track"><div class="g-fill g-after"></div></div><span class="val v-after">…</span></div>
+  </div>
+  <div class="status"><span class="spin"></span><span class="msg"></span><span class="q-badge" hidden></span></div>
+  <div class="goRow" hidden><button class="btn primary go" type="button">Compress</button><span class="gohint"></span></div>
+  <div class="fine" hidden>
+    <label for="q${d.id}">Quality</label>
+    <input type="range" id="q${d.id}" min="30" max="98" value="80">
+    <output>80%</output>
+    <span class="pred"></span>
+    <button class="btn small auto">Compress again</button>
+  </div>
+  <div class="actions" hidden>
+    <a class="btn primary dl" download>Download</a>
+    <button class="btn cmpbtn">Compare quality</button>
+  </div>
+  <div class="compare" hidden>
+    <div class="cmp-box" tabindex="0" aria-label="Before and after comparison">
+      <img class="base" alt="Compressed preview"><img class="top" alt="Original preview">
+      <div class="cmp-line"></div><span class="cmp-tag l">Original</span><span class="cmp-tag r">Compressed</span>
+    </div>
+    <input type="range" class="cmp-range" min="0" max="100" value="50" aria-label="Comparison slider">
+    <p class="cmp-help">Drag the slider. Tap the picture to zoom in 3× and move your finger or mouse to inspect small text. First page shown.</p>
+  </div>`;
+  $('.rm',el).addEventListener('click',()=>{
+    d.run++;docs.splice(docs.indexOf(d),1);
+    if(d.result&&d.result.url)URL.revokeObjectURL(d.result.url);
+    el.remove();
+  });
+  const rng=$('.fine input',el);
+  rng.addEventListener('input',()=>{
+    $('.fine output',el).textContent=rng.value+'%';
+    $('.pred',el).textContent='Calculating…';
+    manualEncode(d,+rng.value);
+  });
+  $('.auto',el).addEventListener('click',()=>{d.manual=false;autoFit(d)});
+  $('.go',el).addEventListener('click',()=>{d.manual=false;autoFit(d)});
+  const cb=$('.compare',el),box=$('.cmp-box',el),cr=$('.cmp-range',el);
+  $('.cmpbtn',el).addEventListener('click',()=>{cb.hidden=!cb.hidden;$('.cmpbtn',el).textContent=cb.hidden?'Compare quality':'Hide comparison';update(d)});
+  cr.addEventListener('input',()=>box.style.setProperty('--pos',cr.value+'%'));
+  box.addEventListener('click',()=>box.classList.toggle('zoom'));
+  box.addEventListener('pointermove',e=>{
+    const r=box.getBoundingClientRect();
+    box.style.setProperty('--ox',((e.clientX-r.left)/r.width*100)+'%');
+    box.style.setProperty('--oy',((e.clientY-r.top)/r.height*100)+'%');
+  });
+  d.el=el;return el;
+}
+function update(d){
+  const el=d.el;if(!el)return;
+  const st=$('.status',el),msg=$('.msg',el),spin=$('.spin',el),badge=$('.q-badge',el);
+  const fine=$('.fine',el),act=$('.actions',el);
+  const r=d.result;
+  $('.fsub',el).textContent=fmt(d.file.size)+(d.pages?` · ${d.pages} page${d.pages>1?'s':''}`:'')+(d.truncated?' (first 40 pages used)':'');
+  // gauge
+  const orig=d.file.size,aft=r?r.size:0;
+  const mx=Math.max(orig,target,aft)*1.06;
+  $('.g-before',el).style.width=(orig/mx*100)+'%';
+  $('.g-before',el).style.background=orig>target?'var(--stamp)':'var(--muted)';
+  $('.v-before',el).textContent=fmt(orig);
+  $('.g-after',el).style.width=(aft/mx*100)+'%';
+  $('.g-after',el).style.background=r&&aft<=target?'var(--ok)':'var(--warn)';
+  $('.v-after',el).textContent=r?fmt(aft):'…';
+  const lim=$('.g-limit',el);lim.style.left=(target/mx*100)+'%';$('span',lim).textContent=fmt(target)+' limit';
+  // status
+  st.className='status';badge.hidden=true;spin.hidden=false;
+  if(d.status==='loading'){msg.textContent=d.kind==='pdf'?`Reading pages… ${Math.round((d.progress||0)*100)}%`:'Reading image…'}
+  else if(d.status==='working'){msg.textContent=d.msg}
+  else if(d.status==='ready'){spin.hidden=true;msg.innerHTML='<b>Ready.</b> Press Compress to fit under '+fmt(target)+'.'}
+  else if(d.status==='error'){spin.hidden=true;st.classList.add('warn');msg.textContent=d.msg}
+  else if(d.status==='done'&&r){
+    spin.hidden=true;
+    if(r.original){st.classList.add('ok');msg.innerHTML='<b>Already under your limit.</b> No compression needed.'}
+    else if(r.tooBig){st.classList.add('warn');msg.innerHTML=`<b>Could not reach ${fmt(target)}</b> without making it unreadable. Best result is ${fmt(r.size)}. Try fewer pages or a bigger limit.`}
+    else{st.classList.add('ok');const sv=Math.round((1-r.size/orig)*100);msg.innerHTML=`<b>Fits under ${fmt(target)}.</b> Now ${fmt(r.size)}, ${sv}% smaller.`+(r.q>=.95&&r.scale>=1?' This is already the highest quality.':'');
+      if(!d.manual&&d.suggestBytes){const step=unit===MB?0.25*MB:50*KB;const need=Math.max(step,Math.ceil(d.suggestBytes*1.05/step)*step);if(need>target)msg.innerHTML+=`<br><b>Small text may look soft at this size.</b> For clear text, try a limit of about ${fmt(need)}.`}}
+    const [lab,tone]=qualityLabel(r);
+    badge.hidden=false;badge.textContent=lab;badge.style.color=tone==='ok'?'var(--ok)':'var(--warn)';
+  }
+  // controls
+  const ready=d.status==='done'&&r;
+  fine.hidden=!(d.canvases&&d.canvases.length&&(d.status==='done'||d.status==='working'));
+  act.hidden=!ready;
+  const gr=$('.goRow',el);gr.hidden=d.status!=='ready';
+  if(d.status==='ready'){$('.go',el).textContent='Compress to under '+fmt(target);$('.gohint',el).textContent=d.file.size<=target?'This file is already under the limit.':''}
+  if(ready){
+    const a=$('.dl',el);a.href=r.url;
+    const base=d.file.name.replace(/\.[^.]+$/,'');
+    a.download=r.original?d.file.name:base+'-fitdoc.'+(d.kind==='pdf'?'pdf':'jpg');
+    a.textContent='Download '+fmt(r.size);
+    const rg=$('.fine input',el);
+    if(!r.original&&!d.manual){rg.value=Math.round(r.q*100);$('.fine output',el).textContent=rg.value+'%'}
+    if(!r.original){
+      $('.pred',el).textContent='File size: '+fmt(r.size);
+      $('.pred',el).style.color=r.size>target?'var(--warn)':'var(--ok)';
+    }else $('.pred',el).textContent='Move to compress anyway';
+    $('.cmpbtn',el).hidden=!(r.preview&&d.origUrl);
+    const cmp=$('.compare',el);
+    if(!cmp.hidden&&r.preview){
+      const c0=d.canvases[0];
+      $('.cmp-box',el).style.aspectRatio=c0.width+'/'+c0.height;
+      $('.base',el).src=r.preview;$('.top',el).src=d.origUrl;
+    }
+  }
+}
+async function addFiles(list){
+  for(const file of list){
+    const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name);
+    const isImg=file.type.startsWith('image/');
+    if(!isPdf&&!isImg){toast(file.name+' is not a PDF or image.');continue}
+    const d={id:++uid,file,kind:isPdf?'pdf':'image',status:'loading',progress:0,canvases:[],run:0,result:null,manual:false};
+    docs.push(d);$('#files').appendChild(createCard(d));update(d);
+    prepare(d).then(()=>{d.status='ready';update(d)}).catch(err=>{
+      d.status='error';
+      d.msg=/password/i.test(err.message||'')?'This PDF is password-protected. Remove the password and try again.':(err.message||'Could not read this file. It may be damaged.');
+      update(d);
+    });
+    await tick();
+  }
+}
+const fi=$('#fileInput'),drop=$('#drop');
+fi.addEventListener('change',()=>{addFiles([...fi.files]);fi.value=''});
+['dragenter','dragover'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',ev=>addFiles([...ev.dataTransfer.files]));
+
+/* ---------- photo resizer ---------- */
+const pc=$('#pCanvas'),px=pc.getContext('2d');
+let pImg=null,pBlob=null,pName='photo',pTimer;
+function pDraw(){
+  if(!pImg)return;
+  const [W,H]=$('#pPreset').value.split('x').map(Number);
+  pc.width=W;pc.height=H;
+  const z=+$('#pZoom').value,ox=+$('#pX').value/100,oy=+$('#pY').value/100;
+  const iw=pImg.width,ih=pImg.height,s=Math.max(W/iw,H/ih)*z;
+  const dw=iw*s,dh=ih*s;
+  const x=(W-dw)/2-ox*Math.max(0,(dw-W)/2),y=(H-dh)/2-oy*Math.max(0,(dh-H)/2);
+  px.fillStyle='#fff';px.fillRect(0,0,W,H);px.imageSmoothingQuality='high';px.drawImage(pImg,x,y,dw,dh);
+  pc.hidden=false;$('#pEmpty').hidden=true;
+  clearTimeout(pTimer);pTimer=setTimeout(pExport,200);
+}
+async function pExport(){
+  const max=Math.max(10,+$('#pMax').value||100)*KB;
+  let lo=0.2,hi=0.95,best=null;
+  const first=await toBlob(pc,hi);
+  if(first.size<=max)best=first;
+  else{
+    for(let i=0;i<8;i++){const m=(lo+hi)/2,b=await toBlob(pc,m);if(b.size<=max){best=b;lo=m}else hi=m}
+    if(!best)best=await toBlob(pc,0.2);
+  }
+  pBlob=best;
+  const st=$('#pStatus'),ok=best.size<=max;
+  st.className='status '+(ok?'ok':'warn');
+  st.innerHTML=ok?`<b>${fmtKB(best.size)}</b>, under your ${fmtKB(max)} limit.`:`<b>${fmtKB(best.size)}</b> is still above ${fmtKB(max)}. Choose a smaller photo type or a higher limit.`;
+  $('#pDl').disabled=false;
+}
+$('#pFile').addEventListener('change',async e=>{
+  const f=e.target.files[0];if(!f)return;
+  pName=f.name.replace(/\.[^.]+$/,'');
+  try{pImg=await createImageBitmap(f)}catch(_){
+    pImg=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(f)}).catch(()=>null);
+  }
+  if(!pImg){toast('Could not read that photo.');return}
+  $('#pZoom').value=1;$('#pX').value=0;$('#pY').value=0;pDraw();
+});
+['pPreset','pZoom','pX','pY','pMax'].forEach(id=>$('#'+id).addEventListener('input',pDraw));
+$('#pDl').addEventListener('click',()=>{
+  if(!pBlob)return;
+  const a=document.createElement('a');a.href=URL.createObjectURL(pBlob);a.download=pName+'-'+$('#pPreset').value+'.jpg';
+  document.body.appendChild(a);a.click();a.remove();
+});
+
+/* ---------- checklist ---------- */
+const COMMON=[
+  ['Passport (valid 6+ months)','Scan every page with stamps, in colour, as one PDF.'],
+  ['Academic transcripts and certificates','SEE/SLC, +2 or A-levels, Bachelor. Scan at 150 to 200 dpi.'],
+  ['English test result (IELTS, PTE, TOEFL)','Keep the original test report PDF.'],
+  ['Statement of Purpose','Check the word limit and file type the university asks for.'],
+  ['Recommendation letters','Usually two, signed and on letterhead.'],
+  ['CV / resume','One or two pages, PDF.'],
+  ['Passport-size photo','Use the photo resizer above for the exact size.'],
+  ['Financial documents','Bank statements, loan or sponsor letters. Names must match.']
+];
+const COUNTRIES={
+  'Australia':[['Offer letter / Confirmation of Enrolment','Needed for the student visa application.'],['Genuine Student statement','Your own words, specific to the course and why Australia.'],['Overseas student health cover','Arranged for the full visa period.']],
+  'United Kingdom':[['CAS statement','Issued by the university after you accept the offer.'],['Proof of funds held for 28 days','Check the current amount and date rules.'],['TB test certificate','From an approved clinic, if required for your country.']],
+  'United States':[['I-20 form','Issued by the university after the financial proof.'],['DS-160 confirmation page','Print the confirmation with the barcode.'],['SEVIS fee receipt','Pay before the visa interview.']],
+  'Canada':[['Letter of acceptance','From a designated learning institution.'],['Provincial attestation letter','Check if it applies to your programme.'],['Proof of funds','Savings, GIC or other accepted proof.']],
+  'New Zealand':[['Offer of Place','From the education provider after you accept.'],['Proof of funds','Bank documents that clearly show who is sponsoring you.'],['Police certificate and medical','Needed for most student visa applications.']],
+  'Ireland':[['Letter of acceptance','From the Irish institution.'],['Proof of funds','Savings or sponsor documents with matching names.'],['Medical insurance','Arranged before you travel.']]
+};
+let country='Australia';
+function ckey(){return 'fitdoc-check-'+country}
+function loadChecks(){try{return JSON.parse(localStorage.getItem(ckey())||'{}')}catch(_){return{}}}
+function saveChecks(o){try{localStorage.setItem(ckey(),JSON.stringify(o))}catch(_){}}
+function drawCountries(){
+  const box=$('#countries');box.innerHTML='';
+  Object.keys(COUNTRIES).forEach(n=>{
+    const b=document.createElement('button');b.className='country';b.textContent=n;
+    b.setAttribute('aria-pressed',String(n===country));
+    b.addEventListener('click',()=>{country=n;drawCountries();drawChecks()});box.appendChild(b);
+  });
+}
+function drawChecks(){
+  const items=[...COUNTRIES[country],...COMMON],saved=loadChecks();
+  const box=$('#cItems');box.innerHTML='';
+  items.forEach(([t,tip],i)=>{
+    const l=document.createElement('label');l.className='citem'+(saved[i]?' done':'');
+    l.innerHTML=`<input type="checkbox" ${saved[i]?'checked':''}><span><b>${esc(t)}</b><small>${esc(tip)}</small></span>`;
+    $('input',l).addEventListener('change',e=>{
+      const s=loadChecks();s[i]=e.target.checked;saveChecks(s);
+      l.classList.toggle('done',e.target.checked);prog(items.length);
+    });
+    box.appendChild(l);
+  });
+  prog(items.length);
+}
+function prog(n){
+  const s=loadChecks();let done=0;for(let i=0;i<n;i++)if(s[i])done++;
+  $('#cCount').textContent=done+' of '+n+' ready';
+  $('#cBar').style.width=(done/n*100)+'%';
+}
+drawCountries();drawChecks();
+})();
+</script>
+<script>
+(function(){
+  const OFFICES=[
+   ['New Baneshwor (Head Office)','The Next Centre, New Baneshwor, Kathmandu','01-5970268','info@thenext.edu.np'],
+   ['Putalisadak','Putalisadak Chowk, Kathmandu 44600','01-5971287','info@thenext.edu.np'],
+   ['Maharajgunj','Opposite to USA Embassy, Maharajgunj, Kathmandu','01-5971601',''],
+   ['Kumaripati (Lalitpur)','Opposite of Kumari Bank Manbhawan, Kumaripati, Lalitpur','01-5971449 / 9851246975','info@thenext.edu.np'],
+   ['Pokhara','Mangal Bhawan, 4th and 5th Floor, Chipledhunga, Pokhara','061-597154',''],
+   ['Biratnagar','Rainbow Galli, Biratnagar','021-590668',''],
+   ['Birtamode','Hanuman Centre, 5th Floor, Birtamode-04, Jhapa','023-591498',''],
+   ['Damak','Damak Beldangi Road, Damak','023-577400','damak@thenext.edu.np'],
+   ['Butwal','Milanchowk, Butwal','071-530737 / 535102','butwal@thenext.edu.np'],
+   ['Bhairahawa','Barmeli Tole-8, Rupendehi','071-574452 / 574457',''],
+   ['Narayangarh (Chitwan)','Lions Chowk, Narayangarh','056-596412 / 596512','chitwan@thenext.edu.np'],
+   ['Tandi','Ratnanagar 01, Chitwan Bakulahar','056-590058','tandi@thenext.edu.np'],
+   ['Parsa','Naya Road, Parsa-Chitwan','056-582497',''],
+   ['Damauli','Vyas-2, Ganeshman Chowk','065-590066','damauli@thenext.edu.np'],
+   ['Nepalgunj','Nepalgunj-2, Banke','081-590199','nepalgunj@thenextglobal.com'],
+   ['Kawasoti','Thana Chowk, Kawasoti 2, Nawalparasi','078-540349',''],
+   ['Sydney, Australia','Suite 401, Level 4, 255 Castlereagh Street, Sydney NSW 2000','+61 2 8084 6249','frontdesk@thenext.com.au'],
+   ['Perth, Australia','Suite 3, 305 Murray Street, Perth, WA','+61 457 280 628','perth@thenext.com.au'],
+   ['Colombo, Sri Lanka','No. 654, Galle Road, Colombo 03','+94 11 258 9342','srilanka@thenextglobal.com']
+  ];
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const sel=$('officeSel'),card=$('ocard'),fOff=$('fOffice');
+  OFFICES.forEach((o,i)=>{[sel,fOff].forEach(s=>{const op=document.createElement('option');op.value=i;op.textContent=o[0];s.appendChild(op)})});
+  function tel(n){const f=n.split(' / ')[0].replace(/[^\d+]/g,'');return f.startsWith('+')?f:'+977'+f.replace(/^0/,'')}
+  function show(){
+    const [n,a,p,m]=OFFICES[sel.value];
+    const map='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent('The Next Education '+n+' '+a);
+    card.innerHTML='<h3>'+esc(n)+'</h3><dl><div><dt>Address</dt><dd>'+esc(a)+'</dd></div><div><dt>Phone</dt><dd><a href="tel:'+tel(p)+'">'+esc(p)+'</a></dd></div>'+(m?'<div><dt>Email</dt><dd><a href="mailto:'+esc(m)+'">'+esc(m)+'</a></dd></div>':'')+'</dl><div class="actions"><a class="btn primary" href="'+map+'" target="_blank" rel="noopener">Get directions</a> <a class="btn" href="https://wa.me/9761789708" target="_blank" rel="noopener">WhatsApp</a></div>';
+  }
+  sel.addEventListener('change',show);show();
+
+  // enquiry -> WhatsApp
+  $('fSend').addEventListener('click',()=>{
+    const name=$('fName').value.trim(),phone=$('fPhone').value.trim();
+    const t=$('toast');
+    if(!name||!phone){t.textContent='Please add your name and phone number.';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);return}
+    const msg='Hello The Next, I am '+name+' ('+phone+'). I would like free counselling for '+$('fDest').value+'. My nearest office is '+OFFICES[fOff.value][0]+'.';
+    window.open('https://wa.me/9761789708?text='+encodeURIComponent(msg),'_blank','noopener');
+  });
+
+  // review carousel
+  const tr=$('rvTrack');
+  const step=()=>{const c=tr.querySelector('.rv-card');return c?c.getBoundingClientRect().width+14:300};
+  $('rvPrev').addEventListener('click',()=>tr.scrollBy({left:-step(),behavior:'smooth'}));
+  $('rvNext').addEventListener('click',()=>tr.scrollBy({left:step(),behavior:'smooth'}));
+
+  const hd=$('hd');
+  addEventListener('scroll',()=>hd.classList.toggle('scrolled',document.documentElement.scrollTop>10),{passive:true});
+  const rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  function countUp(el){
+    const m=el.textContent.trim().match(/^(\d+)(.*)$/);if(!m)return;
+    const n=+m[1],suf=m[2],t0=performance.now(),dur=1600;
+    (function step(t){const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);el.textContent=Math.round(n*e)+suf;if(p<1)requestAnimationFrame(step)})(t0);
+  }
+  if(rm)return;
+  document.body.classList.add('armed');
+  [['.hero h1',0],['.hero .kicker',120],['.hero .dedic',180],['.hero .cards',240],['.hero-actions',420]].forEach(([s,d])=>{
+    const el=document.querySelector(s);el.setAttribute('data-h','');el.style.setProperty('--d',d+'ms');
+  });
+  setTimeout(()=>document.querySelectorAll('.scard b').forEach(countUp),450);
+  const sel2='.head,.tool,.why>div,.proof,.how>div,.photo,.countries,.clist,.svc-list li,.rv,.dgrid,.faq details,.offices>div,.fcard';
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1,rootMargin:'0px 0px -5% 0px'});
+  [...document.querySelectorAll(sel2)].forEach(el=>{
+    el.classList.add('reveal');
+    const sibs=[...el.parentElement.children].filter(c=>c.matches(sel2));
+    el.style.setProperty('--d',(sibs.indexOf(el)%4)*80+'ms');
+    io.observe(el);
+  });
+})();
+</script>
+<script>
+(function(){
+  const files=document.getElementById('files'),bar=document.getElementById('filesBar'),cnt=document.getElementById('fileCount');
+  function upd(){const n=files.children.length;bar.hidden=n===0;cnt.textContent=n+(n===1?' file':' files')+' added'}
+  new MutationObserver(upd).observe(files,{childList:true});upd();
+  document.getElementById('compressAll').addEventListener('click',()=>{[...files.querySelectorAll('.go')].forEach(b=>{if(!b.closest('.goRow').hidden)b.click()})});
+  const dlBtn=document.getElementById('downloadAll'),toastEl=document.getElementById('toast');
+  let dlTimer,busy=false;
+  function say(m){toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(dlTimer);dlTimer=setTimeout(()=>toastEl.classList.remove('show'),3500)}
+  dlBtn.addEventListener('click',async()=>{
+    if(busy)return;
+    const cards=[...files.querySelectorAll('.file')];
+    const links=cards.filter(c=>!c.querySelector('.actions').hidden).map(c=>c.querySelector('a.dl')).filter(a=>a&&a.href);
+    if(!links.length){say('Compress your files first, then press Download all.');return}
+    busy=true;dlBtn.disabled=true;
+    const waiting=cards.length-links.length;
+    for(let i=0;i<links.length;i++){
+      dlBtn.textContent='Downloading '+(i+1)+' of '+links.length+'…';
+      links[i].click();
+      await new Promise(r=>setTimeout(r,900));
+    }
+    dlBtn.textContent='Download all';dlBtn.disabled=false;busy=false;
+    say(links.length+(links.length===1?' file':' files')+' downloaded'+(waiting>0?'. '+waiting+' not ready yet.':'.')+' If some are missing, allow multiple downloads in your browser.');
+  });
+  document.getElementById('clearAll').addEventListener('click',()=>{[...files.querySelectorAll('.rm')].forEach(b=>b.click())});
+})();
+</script>
+<script>
+(function(){
+  const map={'United Kingdom':'UK','Netherlands':'Denmark / Europe','Europe':'Denmark / Europe'};
+  document.querySelectorAll('.dtile').forEach(b=>b.addEventListener('click',()=>{
+    const v=map[b.dataset.d]||b.dataset.d,sel=document.getElementById('fDest');
+    [...sel.options].forEach(o=>{if(o.text===v)sel.value=o.value||o.text});
+    document.getElementById('enquiry').scrollIntoView({behavior:'smooth'});
+    setTimeout(()=>document.getElementById('fName').focus({preventScroll:true}),600);
+  }));
+})();
+</script>
+</body>
+</html>
