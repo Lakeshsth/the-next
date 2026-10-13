@@ -68,7 +68,7 @@ async function needJsPdf(){
 /* ---------- reading files ---------- */
 const MAX_PX=4000;
 const MAX_PAGES=300;      /* most pages we will process in one PDF */
-const TOTAL_PX=120e6;
+const TOTAL_PX=120e6;     /* memory budget across all pages (about 480 MB) */
 async function prepare(d){
   if(d.kind==='image'){
     let bmp;
@@ -84,18 +84,21 @@ async function prepare(d){
     await needPdf();
     const buf=await d.file.arrayBuffer();
     const pdf=await pdfjsLib.getDocument({data:buf}).promise;
-    const n=Math.min(pdf.numPages,40);
-    d.pages=pdf.numPages;d.truncated=pdf.numPages>40;
+    const n=Math.min(pdf.numPages,MAX_PAGES);
+    d.pages=pdf.numPages;d.truncated=pdf.numPages>MAX_PAGES;
     d.canvases=[];d.pageSizes=[];
+    const perPage=Math.min(8e6,TOTAL_PX/n); /* pixel budget per page, shrinks as page count grows */
     for(let i=1;i<=n;i++){
       const p=await pdf.getPage(i);
       const v1=p.getViewport({scale:1});
       let sc=(n>12?150:n>4?200:250)/72;
-      while(v1.width*sc*v1.height*sc>8e6&&sc>0.8)sc-=0.1;
+      const area=v1.width*v1.height;
+      if(area*sc*sc>perPage)sc=Math.max(0.4,Math.sqrt(perPage/area));
       const vp=p.getViewport({scale:sc});
       const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
       const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
       await p.render({canvasContext:x,viewport:vp}).promise;
+      p.cleanup();
       d.canvases.push(c);d.pageSizes.push([v1.width,v1.height]);
       d.progress=i/n;update(d);await tick();
     }
@@ -284,7 +287,7 @@ function update(d){
   const st=$('.status',el),msg=$('.msg',el),spin=$('.spin',el),badge=$('.q-badge',el);
   const fine=$('.fine',el),act=$('.actions',el);
   const r=d.result;
-  $('.fsub',el).textContent=fmt(d.file.size)+(d.pages?` · ${d.pages} page${d.pages>1?'s':''}`:'')+(d.truncated?' (first 40 pages used)':'');
+  $('.fsub',el).textContent=fmt(d.file.size)+(d.pages?` · ${d.pages} page${d.pages>1?'s':''}`:'')+(d.truncated?` (first ${MAX_PAGES} pages used)`:'');
   // gauge
   const orig=d.file.size,aft=r?r.size:0;
   const mx=Math.max(orig,target,aft)*1.06;
